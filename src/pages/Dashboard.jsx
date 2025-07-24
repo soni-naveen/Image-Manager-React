@@ -1,10 +1,9 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Home, LogOut, Plus, Upload } from "lucide-react";
+import { Home, LogOut, Plus, Upload, X, Search } from "lucide-react";
 import FolderCard from "@/components/folder-card";
 import ImageCard from "@/components/image-card";
 
@@ -26,6 +25,8 @@ export default function Dashboard() {
   const [folders, setFolders] = useState([]);
   const [images, setImages] = useState([]);
   const [currentFolder, setCurrentFolder] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [breadcrumb, setBreadcrumb] = useState([]);
   const [loadImages, setLoadImages] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -178,6 +179,39 @@ export default function Dashboard() {
 
   const handleImageDelete = (imageId) => {
     setImages(images.filter((img) => img._id !== imageId));
+    setSearchResults(searchResults.filter((img) => img._id !== imageId));
+  };
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${URL}/api/images/search?q=${encodeURIComponent(searchQuery)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const results = await response.json();
+        setSearchResults(results);
+      }
+    } catch (error) {
+      console.error("Error searching images:", error);
+    }
   };
 
   const handleFolderDelete = (folderId) => {
@@ -249,6 +283,46 @@ export default function Dashboard() {
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
+        )}
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-2">
+            <Input
+              placeholder="Search images..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              className="flex-1"
+            />
+            <Button onClick={handleSearch}>
+              <Search className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <Card className="mb-6 relative">
+            <CardHeader>
+              <CardTitle>Search Results ({searchResults.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {searchResults.map((image) => (
+                  <ImageCard
+                    key={image._id}
+                    image={image}
+                    onDelete={handleImageDelete}
+                  />
+                ))}
+              </div>
+            </CardContent>
+            <div className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X onClick={() => setSearchResults([])} className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </div>
+          </Card>
         )}
 
         {/* Breadcrumb */}

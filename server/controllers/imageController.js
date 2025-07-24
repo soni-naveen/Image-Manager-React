@@ -99,3 +99,26 @@ exports.deleteImage = async (req, res) => {
     });
   }
 };
+
+exports.searchImage = async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query) {
+      return res.json([]);
+    }
+
+    const userId = req.user.id;
+
+    // Search images by name (case-insensitive)
+    const images = await Image.find({
+      userId: userId,
+      name: { $regex: query, $options: "i" },
+    }).sort({ createdAt: -1 });
+
+    return res.json(images);
+  } catch (error) {
+    console.error("Search images error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
