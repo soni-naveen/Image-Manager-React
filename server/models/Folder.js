@@ -8,10 +8,12 @@ const FolderSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Folder",
+    default: null,
   },
   createdAt: {
     type: Date,

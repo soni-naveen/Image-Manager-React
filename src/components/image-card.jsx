@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -94,12 +93,10 @@ export default function ImageCard({ image, onDelete }) {
         <CardContent className="p-1">
           <div className="relative aspect-square mb-2 bg-gray-100 rounded overflow-hidden">
             {image.url ? (
-              <Image
+              <img
                 src={thumbnailUrl || image.url}
                 alt={image.name}
-                fill
                 className="object-cover"
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">

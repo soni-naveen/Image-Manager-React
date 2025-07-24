@@ -8,10 +8,12 @@ const ImageSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
   },
   folderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Folder",
+    default: null,
   },
   cloudinaryPublicId: {
     type: String,
