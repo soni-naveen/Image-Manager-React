@@ -1,8 +1,9 @@
 const { verifyToken } = require("../lib/auth");
 const clientPromise = require("../config/database");
+const { ObjectId } = require("mongodb");
 
-export async function authenticateUser(req) {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+exports.authenticateUser = async (req) => {
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
 
   if (!token) {
     return null;
@@ -20,4 +21,4 @@ export async function authenticateUser(req) {
     .findOne({ _id: new ObjectId(decoded.userId) });
 
   return user;
-}
+};
