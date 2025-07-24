@@ -1,24 +1,27 @@
 const { verifyToken } = require("../lib/auth");
-const clientPromise = require("../config/database");
-const { ObjectId } = require("mongodb");
 
-exports.authenticateUser = async (req) => {
-  const token = req.headers["authorization"]?.replace("Bearer ", "");
+exports.authenticateUser = async (req, res, next) => {
+  try {
+    const token = req.headers["authorization"]?.replace("Bearer ", "");
 
-  if (!token) {
-    return null;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token Missing!",
+      });
+    }
+
+    const decoded = verifyToken(token);
+    req.user = decoded;
+
+    if (!decoded) {
+      return null;
+    }
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Something went wrong, while validating the token",
+    });
   }
-
-  const decoded = verifyToken(token);
-  if (!decoded) {
-    return null;
-  }
-
-  const client = await clientPromise;
-  const db = client.db("imagemanager");
-  const user = await db
-    .collection("users")
-    .findOne({ _id: new ObjectId(decoded.userId) });
-
-  return user;
 };

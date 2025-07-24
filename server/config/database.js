@@ -1,26 +1,14 @@
-const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  throw new Error("MONGODB_URI is not defined in environment variables");
-}
+exports.database = () => {
+  try {
+    mongoose.connect(process.env.MONGODB_URI);
+    console.log("DB connected successfully");
 
-const options = {};
-
-let client;
-let clientPromise;
-
-// In development, use global to preserve client across reloads (like hot reload)
-if (process.env.NODE_ENV === "development") {
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+  } catch (error) {
+    console.log("Issue in DB connection");
+    console.log(error.message);
+    process.exit(1);
   }
-  clientPromise = global._mongoClientPromise;
-} else {
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect();
-}
-
-module.exports = clientPromise;
+};

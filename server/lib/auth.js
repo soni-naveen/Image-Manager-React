@@ -10,7 +10,7 @@ async function verifyPassword(password, hashedPassword) {
 }
 
 function generateToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 }
 
 function verifyToken(token) {

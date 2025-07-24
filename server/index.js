@@ -1,17 +1,18 @@
 const express = require("express");
+const dbConnect = require("./config/database");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const cors = require("cors");
-const dotenv = require("dotenv");
+require("dotenv").config();
 
-dotenv.config();
+//Connect to database
+dbConnect.database();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 const corsOptions = {
-    //   origin: process.env.CORS_ORIGIN,
-  origin: "*",
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
 };
 

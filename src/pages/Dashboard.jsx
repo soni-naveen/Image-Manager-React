@@ -18,7 +18,6 @@ export default function Dashboard() {
       navigate("/login");
       return;
     }
-
     fetchUserData();
   }, []);
 
