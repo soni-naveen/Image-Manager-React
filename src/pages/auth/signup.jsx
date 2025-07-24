@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,6 +13,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SignupPage() {
+  const URL = import.meta.env.VITE_REACT_BASE_URL;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -44,7 +43,7 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch(`${URL}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
