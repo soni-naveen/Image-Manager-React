@@ -20,6 +20,7 @@ import {
 import { Folder, MoreVertical, Trash2, FolderOpen } from "lucide-react";
 
 export default function FolderCard({ folder, onDelete, onNavigate }) {
+  const URL = import.meta.env.VITE_REACT_BASE_URL;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -27,7 +28,7 @@ export default function FolderCard({ folder, onDelete, onNavigate }) {
     setDeleting(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/folders/delete", {
+      const response = await fetch(`${URL}/api/folders/delete`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

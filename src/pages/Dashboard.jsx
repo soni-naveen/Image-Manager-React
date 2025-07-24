@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { LogOut, Plus, Upload } from "lucide-react";
+import { Home, LogOut, Plus, Upload } from "lucide-react";
 import FolderCard from "@/components/folder-card";
 import ImageCard from "@/components/image-card";
 
@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [folders, setFolders] = useState([]);
   const [images, setImages] = useState([]);
   const [currentFolder, setCurrentFolder] = useState(null);
+  const [breadcrumb, setBreadcrumb] = useState([]);
   const [loadImages, setLoadImages] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -175,6 +176,40 @@ export default function Dashboard() {
     }
   };
 
+  const handleImageDelete = (imageId) => {
+    setImages(images.filter((img) => img._id !== imageId));
+  };
+
+  const handleFolderDelete = (folderId) => {
+    setFolders(folders.filter((folder) => folder._id !== folderId));
+  };
+
+  const navigateToFolder = (folderId, folderName) => {
+    setLoadImages(true);
+    setCurrentFolder(folderId);
+
+    setBreadcrumb((prev) => {
+      const exists = prev.some((b) => b.id === folderId);
+      if (exists) return prev; // Avoid duplicates
+      return [...prev, { id: folderId, name: folderName }];
+    });
+  };
+
+  const navigateToRoot = () => {
+    setCurrentFolder(null);
+    setBreadcrumb([]);
+  };
+
+  const navigateToBreadcrumb = (index) => {
+    if (index === -1) {
+      navigateToRoot();
+    } else {
+      const newBreadcrumb = breadcrumb.slice(0, index + 1);
+      setCurrentFolder(newBreadcrumb[newBreadcrumb.length - 1].id);
+      setBreadcrumb(newBreadcrumb);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/");
@@ -215,6 +250,32 @@ export default function Dashboard() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        {/* Breadcrumb */}
+        <div className="flex items-center mb-6 overflow-x-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={navigateToRoot}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <Home className="w-4 h-4 mr-1" />
+            Home
+          </Button>
+          {breadcrumb.map((item, index) => (
+            <div key={item.id} className="flex items-center">
+              <span className="text-gray-400">/</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigateToBreadcrumb(index)}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                {item.name}
+              </Button>
+            </div>
+          ))}
+        </div>
 
         {/* Action Buttons */}
         <div className="flex space-x-4 mb-6">
@@ -323,12 +384,21 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {/* Folders */}
               {folders.map((folder) => (
-                <FolderCard key={folder._id} folder={folder} />
+                <FolderCard
+                  key={folder._id}
+                  folder={folder}
+                  onDelete={handleFolderDelete}
+                  onNavigate={navigateToFolder}
+                />
               ))}
 
               {/* Images */}
               {images.map((image) => (
-                <ImageCard key={image._id} image={image} />
+                <ImageCard
+                  key={image._id}
+                  image={image}
+                  onDelete={handleImageDelete}
+                />
               ))}
             </div>
 

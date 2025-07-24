@@ -20,6 +20,7 @@ import {
 import { MoreVertical, Eye, Download, Trash2 } from "lucide-react";
 
 export default function ImageCard({ image, onDelete }) {
+  const URL = import.meta.env.VITE_REACT_BASE_URL;
   const [showPreview, setShowPreview] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -28,7 +29,7 @@ export default function ImageCard({ image, onDelete }) {
     setDeleting(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/images/delete", {
+      const response = await fetch(`${URL}/api/images/delete`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -193,7 +194,7 @@ export default function ImageCard({ image, onDelete }) {
             {/* Image Preview */}
             <div className="relative max-h-[60vh] overflow-hidden rounded bg-gray-100">
               {image.url ? (
-                <Image
+                <img
                   src={image.url || "/placeholder.svg"}
                   alt={image.name}
                   width={image.width || 800}

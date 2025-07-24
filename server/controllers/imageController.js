@@ -1,5 +1,9 @@
 const Image = require("../models/Image");
-const { uploadToCloudinary } = require("../lib/cloudinary");
+const { ObjectId } = require("mongodb");
+const {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} = require("../lib/cloudinary");
 
 exports.uploadImage = async (req, res) => {
   try {
@@ -21,7 +25,7 @@ exports.uploadImage = async (req, res) => {
     const imageData = {
       name,
       userId: userId,
-      folderId: folderId ? new ObjectId(folderId) : null,
+      folderId: folderId ? folderId : null,
       cloudinaryPublicId: cloudinaryResult.publicId,
       url: cloudinaryResult.url,
       width: cloudinaryResult.width,
@@ -47,6 +51,51 @@ exports.uploadImage = async (req, res) => {
     console.error("Upload image error:", error);
     return res.status(500).json({
       message: error.message || "Internal server error",
+    });
+  }
+};
+
+exports.deleteImage = async (req, res) => {
+  try {
+    const { imageId } = req.body;
+    const userId = req.user.id;
+
+    if (!imageId) {
+      return res.status(400).json({ message: "Image ID is required" });
+    }
+
+    // Find the image to get Cloudinary public ID
+    const image = await Image.findOne({
+      _id: new ObjectId(imageId),
+      userId: userId,
+    });
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // Delete from Cloudinary
+    if (image.cloudinaryPublicId) {
+      try {
+        await deleteFromCloudinary(image.cloudinaryPublicId);
+      } catch (cloudinaryError) {
+        console.error("Failed to delete from Cloudinary:", cloudinaryError);
+      }
+    }
+
+    // Delete from database
+    await Image.deleteOne({
+      _id: new ObjectId(imageId),
+      userId: userId,
+    });
+
+    return res.status(200).json({
+      message: "Image deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete image error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
     });
   }
 };
