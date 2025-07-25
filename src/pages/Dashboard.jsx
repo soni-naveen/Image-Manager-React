@@ -308,16 +308,21 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <Alert
-            variant="destructive"
-            className="mb-4 flex items-center justify-between"
-          >
-            <AlertDescription>{error}</AlertDescription>
-            <div className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-              <X onClick={() => setError("")} className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </div>
-          </Alert>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-md p-4">
+            <Alert
+              variant="destructive"
+              className="relative w-full bg-red-100 max-w-md flex items-center justify-between shadow-lg"
+            >
+              <AlertDescription>{error}</AlertDescription>
+              <button
+                onClick={() => setError("")}
+                className="ml-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </Alert>
+          </div>
         )}
 
         {/* Search Bar */}
