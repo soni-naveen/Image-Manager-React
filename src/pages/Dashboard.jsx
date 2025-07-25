@@ -308,7 +308,7 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-gray-900/50 backdrop-blur-sm p-4">
             <Alert
               variant="destructive"
               className="relative w-full bg-red-100 max-w-md flex items-center justify-between shadow-lg"
