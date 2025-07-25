@@ -32,8 +32,8 @@ exports.uploadImage = async (req, res) => {
       height: cloudinaryResult.height,
       format: cloudinaryResult.format,
       size: cloudinaryResult.bytes,
-      filename: image.name,
-      type: image.type,
+      filename: image.originalname,
+      type: image.mimetype,
       createdAt: new Date(),
     };
 
