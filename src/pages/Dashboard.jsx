@@ -257,6 +257,7 @@ export default function Dashboard() {
   };
 
   const navigateToRoot = () => {
+    setLoadImages(true);
     setCurrentFolder(null);
     setBreadcrumb([]);
   };
@@ -265,6 +266,7 @@ export default function Dashboard() {
     if (index === -1) {
       navigateToRoot();
     } else {
+      setLoadImages(true);
       const newBreadcrumb = breadcrumb.slice(0, index + 1);
       setCurrentFolder(newBreadcrumb[newBreadcrumb.length - 1].id);
       setBreadcrumb(newBreadcrumb);

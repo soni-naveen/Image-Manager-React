@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 async function hashPassword(password) {
   return await bcrypt.hash(password, 12);
@@ -21,4 +22,14 @@ function verifyToken(token) {
   }
 }
 
-module.exports = { hashPassword, verifyPassword, generateToken, verifyToken };
+function generateResetToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+module.exports = {
+  hashPassword,
+  verifyPassword,
+  generateToken,
+  verifyToken,
+  generateResetToken,
+};

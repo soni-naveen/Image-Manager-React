@@ -1,5 +1,12 @@
 const User = require("../models/User");
-const { verifyPassword, hashPassword, generateToken } = require("../lib/auth");
+const {
+  verifyPassword,
+  hashPassword,
+  generateToken,
+  generateResetToken,
+} = require("../lib/auth");
+
+const { sendPasswordResetEmail } = require("../lib/email");
 
 exports.signup = async (req, res) => {
   try {
@@ -82,6 +89,136 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    // Always return success to prevent email enumeration attacks
+    // But only send email if user exists
+    if (user) {
+      // Generate reset token (expires in 1 hour)
+      const resetToken = generateResetToken();
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Save reset token to database
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            resetToken,
+            resetTokenExpiry,
+          },
+        }
+      );
+
+      // Send password reset email
+      try {
+        await sendPasswordResetEmail(email, user.name, resetToken);
+      } catch (emailError) {
+        console.error("Failed to send password reset email:", emailError);
+        // Don't expose email sending errors to the user
+      }
+    }
+
+    // Always return success message
+    return res.json({
+      message:
+        "If an account with that email exists, we've sent a password reset link",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.verifyResetToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: "Reset token is required" });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+    }
+
+    return res.json({ message: "Token is valid" });
+  } catch (error) {
+    console.error("Verify reset token error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res
+        .status(400)
+        .json({ message: "Token and password are required" });
+    }
+
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(password);
+
+    // Update user password and clear reset token
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          password: hashedPassword,
+          updatedAt: new Date(),
+        },
+        $unset: {
+          resetToken: "",
+          resetTokenExpiry: "",
+        },
+      }
+    );
+
+    return res.json({
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
