@@ -122,3 +122,81 @@ exports.searchImage = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.renameImage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { imageId, newName } = req.body;
+
+    if (!imageId || !newName) {
+      return res
+        .status(400)
+        .json({ message: "Image ID and new name are required" });
+    }
+
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      return res.status(400).json({ message: "Image name cannot be empty" });
+    }
+
+    if (trimmedName.length > 100) {
+      return res
+        .status(400)
+        .json({ message: "Image name cannot exceed 100 characters" });
+    }
+
+    // Verify image ownership
+    const image = await Image.findOne({
+      _id: new ObjectId(imageId),
+      userId: userId,
+    });
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // Check if an image with the same name already exists in the same folder
+    const existingImage = await Image.findOne({
+      name: trimmedName,
+      folderId: image.folderId,
+      userId: userId,
+    });
+
+    if (existingImage) {
+      return res.status(400).json({
+        message: "An image with this name already exists in this folder",
+      });
+    }
+
+    // Update image name
+    const result = await Image.updateOne(
+      {
+        _id: new ObjectId(imageId),
+        userId: userId,
+      },
+      {
+        $set: {
+          name: trimmedName,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    return res.json({
+      message: "Image renamed successfully",
+      image: {
+        ...image,
+        name: trimmedName,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Rename image error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

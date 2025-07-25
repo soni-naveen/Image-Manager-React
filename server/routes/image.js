@@ -8,10 +8,12 @@ const {
   uploadImage,
   deleteImage,
   searchImage,
+  renameImage
 } = require("../controllers/imageController");
 
 router.post("/upload", authenticateUser, upload.single("image"), uploadImage);
 router.delete("/delete", authenticateUser, deleteImage);
 router.get("/search", authenticateUser, searchImage);
+router.put("/rename", authenticateUser, renameImage);
 
 module.exports = router;

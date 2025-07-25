@@ -1,8 +1,7 @@
-"use client";
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,13 +16,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MoreVertical, Eye, Download, Trash2 } from "lucide-react";
+import {
+  MoreVertical,
+  Eye,
+  Download,
+  Trash2,
+  Check,
+  X,
+  Edit,
+} from "lucide-react";
 
-export default function ImageCard({ image, onDelete }) {
+export default function ImageCard({ image, onDelete, onRename, onError }) {
   const URL = import.meta.env.VITE_REACT_BASE_URL;
   const [showPreview, setShowPreview] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(image.name);
+  const [saving, setSaving] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -41,13 +51,65 @@ export default function ImageCard({ image, onDelete }) {
       if (response.ok) {
         onDelete(image._id);
       } else {
-        alert("Failed to delete image");
+        onError("Failed to delete image");
       }
     } catch (error) {
       console.error("Error deleting image:", error);
-      alert("Error deleting image");
+      onError("Error deleting image");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleRename = async () => {
+    if (!editName.trim() || editName === image.name) {
+      setEditing(false);
+      setEditName(image.name);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/api/images/rename`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          imageId: image._id,
+          newName: editName.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        onRename(image._id, editName.trim());
+        setEditing(false);
+      } else {
+        const data = await response.json();
+        onError(data.message || "Failed to rename image");
+        setEditName(image.name);
+      }
+    } catch (error) {
+      console.error("Error renaming image:", error);
+      onError("Error renaming image");
+      setEditName(image.name);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setEditName(image.name);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleRename();
+    } else if (e.key === "Escape") {
+      handleCancelEdit();
     }
   };
 
@@ -92,7 +154,7 @@ export default function ImageCard({ image, onDelete }) {
     <>
       <Card className="group hover:shadow-md transition-shadow relative">
         <CardContent className="p-1">
-          <div className="relative aspect-square mb-2 bg-gray-100 rounded overflow-hidden">
+          <div className="relative aspect-square mb-2 bg-gray-100 rounded-md overflow-hidden">
             {image.url ? (
               <img
                 src={thumbnailUrl || image.url}
@@ -106,58 +168,104 @@ export default function ImageCard({ image, onDelete }) {
             )}
 
             {/* Hover overlay with actions */}
-            <div className="absolute inset-0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <div className="flex space-x-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setShowPreview(true)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Actions dropdown */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="secondary" className="h-6 w-6 p-0">
-                    <MoreVertical className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setShowPreview(true)}>
-                    <Eye className="w-4 h-4 mr-1" />
-                    Preview
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownload}>
-                    <Download className="w-4 h-4 mr-1" />
-                    Download
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDeleteDialog(true);
-                    }}
-                    className="text-red-600 focus:text-red-600"
+            {!editing && (
+              <div className="absolute inset-0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setShowPreview(true)}
+                    className="h-8 w-8 p-0"
                   >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    {deleting ? "Deleting..." : "Delete"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            {/* Actions dropdown */}
+            {!editing && (
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-6 w-6 p-0"
+                    >
+                      <MoreVertical className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setShowPreview(true)}>
+                      <Eye className="w-4 h-4 mr-1" />
+                      Preview
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setEditing(true)}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownload}>
+                      <Download className="w-4 h-4 mr-1" />
+                      Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteDialog(true);
+                      }}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      {deleting ? "Deleting..." : "Delete"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1">
-            <p
-              className="text-xs sm:text-sm text-center font-medium truncate"
-              title={image.name}
-            >
-              {image.name}
-            </p>
+            {editing ? (
+              <div className="space-y-2">
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  className="text-sm"
+                  autoFocus
+                  disabled={saving}
+                />
+                <div className="flex justify-center space-x-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleRename}
+                    disabled={saving}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Check className="w-3 h-3 text-green-600" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                    className="h-6 w-6 p-0"
+                  >
+                    <X className="w-3 h-3 text-red-600" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p
+                  className="text-xs sm:text-sm text-center font-medium truncate whitespace-pre"
+                  title={image.name}
+                >
+                  {image.name}
+                </p>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

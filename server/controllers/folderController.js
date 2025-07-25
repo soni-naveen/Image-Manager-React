@@ -12,6 +12,19 @@ exports.createFolder = async (req, res) => {
       return res.status(400).json({ message: "Folder name is required" });
     }
 
+    // Check if a folder with the same name already exists in the same parent directory
+    const existingFolder = await Folder.findOne({
+      name: name,
+      userId: userId,
+      parentId: parentId ? new ObjectId(parentId) : null,
+    });
+
+    if (existingFolder) {
+      return res.status(400).json({
+        message: "A folder with this name already exists in this location",
+      });
+    }
+
     const folderData = {
       name,
       userId: userId,
@@ -124,7 +137,7 @@ exports.deleteFolder = async (req, res) => {
 
     // Get all folder IDs to delete (including nested ones)
     const folderIdsToDelete = await getAllNestedFolderIds(folderId);
-    const objectIdsToDelete = folderIdsToDelete.map(id => new ObjectId(id));
+    const objectIdsToDelete = folderIdsToDelete.map((id) => new ObjectId(id));
 
     // Get all images in these folders
     const imagesToDelete = await Image.find({
@@ -171,5 +184,83 @@ exports.deleteFolder = async (req, res) => {
     return res.status(500).json({
       message: "Internal server error",
     });
+  }
+};
+
+exports.renameFolder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { folderId, newName } = req.body;
+
+    if (!folderId || !newName) {
+      return res
+        .status(400)
+        .json({ message: "Folder ID and new name are required" });
+    }
+
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      return res.status(400).json({ message: "Folder name cannot be empty" });
+    }
+
+    if (trimmedName.length > 100) {
+      return res
+        .status(400)
+        .json({ message: "Folder name cannot exceed 100 characters" });
+    }
+
+    // Verify folder ownership
+    const folder = await Folder.findOne({
+      _id: new ObjectId(folderId),
+      userId: userId,
+    });
+
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    // Check if a folder with the same name already exists in the same parent directory
+    const existingFolder = await Folder.findOne({
+      name: trimmedName,
+      parentId: folder.parentId,
+      userId: userId,
+    });
+
+    if (existingFolder) {
+      return res.status(400).json({
+        message: "A folder with this name already exists in this location",
+      });
+    }
+
+    // Update folder name
+    const result = await Folder.updateOne(
+      {
+        _id: new ObjectId(folderId),
+        userId: userId,
+      },
+      {
+        $set: {
+          name: trimmedName,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    return res.json({
+      message: "Folder renamed successfully",
+      folder: {
+        ...folder,
+        name: trimmedName,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Rename folder error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Home, LogOut, Plus, Upload, X, Search } from "lucide-react";
+import { Plus, Search, LogOut, Home, Upload, X } from "lucide-react";
 import FolderCard from "@/components/folder-card";
 import ImageCard from "@/components/image-card";
 
@@ -111,19 +111,19 @@ export default function Dashboard() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: folderName,
+          name: folderName.trim(),
           parentId: currentFolder,
         }),
       });
 
       if (response.ok) {
-        setFolderName("");
-        setShowCreateFolder(false);
         fetchFolderContents();
       } else {
         const data = await response.json();
         setError(data.message || "Failed to create folder");
       }
+      setFolderName("");
+      setShowCreateFolder(false);
     } catch (error) {
       setError("Network error. Please try again.");
     }
@@ -137,7 +137,7 @@ export default function Dashboard() {
     setUploadProgress(0);
 
     const formData = new FormData();
-    formData.append("name", imageName);
+    formData.append("name", imageName.trim());
     formData.append("image", imageFile);
     formData.append("folderId", currentFolder || "");
 
@@ -161,14 +161,14 @@ export default function Dashboard() {
       setUploadProgress(100);
 
       if (response.ok) {
-        setImageName("");
-        setImageFile(null);
-        setShowUploadImage(false);
         fetchFolderContents();
       } else {
         const data = await response.json();
         setError(data.message || "Failed to upload image");
       }
+      setImageName("");
+      setImageFile(null);
+      setShowUploadImage(false);
     } catch (error) {
       setError("Network error. Please try again.");
     } finally {
@@ -216,6 +216,33 @@ export default function Dashboard() {
 
   const handleFolderDelete = (folderId) => {
     setFolders(folders.filter((folder) => folder._id !== folderId));
+  };
+
+  const handleFolderRename = (folderId, newName) => {
+    setFolders(
+      folders.map((folder) =>
+        folder._id === folderId
+          ? { ...folder, name: newName, updatedAt: new Date() }
+          : folder
+      )
+    );
+  };
+
+  const handleImageRename = (imageId, newName) => {
+    setImages(
+      images.map((image) =>
+        image._id === imageId
+          ? { ...image, name: newName, updatedAt: new Date() }
+          : image
+      )
+    );
+    setSearchResults(
+      searchResults.map((image) =>
+        image._id === imageId
+          ? { ...image, name: newName, updatedAt: new Date() }
+          : image
+      )
+    );
   };
 
   const navigateToFolder = (folderId, folderName) => {
@@ -278,10 +305,18 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert
+            variant="destructive"
+            className="mb-4 flex items-center justify-between"
+          >
             <AlertDescription>{error}</AlertDescription>
+            <div className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X onClick={() => setError("")} className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </div>
           </Alert>
         )}
 
@@ -314,6 +349,7 @@ export default function Dashboard() {
                     key={image._id}
                     image={image}
                     onDelete={handleImageDelete}
+                    onRename={handleImageRename}
                   />
                 ))}
               </div>
@@ -463,6 +499,8 @@ export default function Dashboard() {
                   folder={folder}
                   onDelete={handleFolderDelete}
                   onNavigate={navigateToFolder}
+                  onRename={handleFolderRename}
+                  onError={setError}
                 />
               ))}
 
@@ -472,6 +510,8 @@ export default function Dashboard() {
                   key={image._id}
                   image={image}
                   onDelete={handleImageDelete}
+                  onRename={handleImageRename}
+                  onError={setError}
                 />
               ))}
             </div>
