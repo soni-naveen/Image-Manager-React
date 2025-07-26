@@ -154,7 +154,10 @@ export default function ImageCard({ image, onDelete, onRename, onError }) {
     <>
       <Card className="group hover:shadow-md transition-shadow relative">
         <CardContent className="p-1">
-          <div className="relative aspect-square mb-2 bg-gray-100 rounded-md overflow-hidden">
+          <div
+            onClick={() => setShowPreview(true)}
+            className="relative aspect-square mb-1 bg-gray-100 rounded-md overflow-hidden"
+          >
             {image.url ? (
               <img
                 src={thumbnailUrl || image.url}
@@ -171,55 +174,10 @@ export default function ImageCard({ image, onDelete, onRename, onError }) {
             {!editing && (
               <div className="absolute inset-0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowPreview(true)}
-                    className="h-8 w-8 p-0"
-                  >
+                  <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
                     <Eye className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-            )}
-            {/* Actions dropdown */}
-            {!editing && (
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-6 w-6 p-0"
-                    >
-                      <MoreVertical className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setShowPreview(true)}>
-                      <Eye className="w-4 h-4 mr-1" />
-                      Preview
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setEditing(true)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownload}>
-                      <Download className="w-4 h-4 mr-1" />
-                      Download
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowDeleteDialog(true);
-                      }}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      {deleting ? "Deleting..." : "Delete"}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             )}
           </div>
@@ -231,7 +189,7 @@ export default function ImageCard({ image, onDelete, onRename, onError }) {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  className="text-sm"
+                  className="text-sm text-center"
                   autoFocus
                   disabled={saving}
                 />
@@ -257,14 +215,48 @@ export default function ImageCard({ image, onDelete, onRename, onError }) {
                 </div>
               </div>
             ) : (
-              <>
+              <div className="flex justify-between items-center">
                 <p
-                  className="text-xs sm:text-sm text-center font-medium truncate whitespace-pre"
+                  className="text-sm text-center font-medium truncate whitespace-pre pl-1.5"
                   title={image.name}
                 >
                   {image.name}
                 </p>
-              </>
+                {/* Actions dropdown */}
+                <div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="none" className="h-6 w-6 p-0">
+                        <MoreVertical className="w-3 h-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" side="top">
+                      <DropdownMenuItem onClick={() => setShowPreview(true)}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        Preview
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setEditing(true)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleDownload}>
+                        <Download className="w-4 h-4 mr-1" />
+                        Download
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteDialog(true);
+                        }}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        {deleting ? "Deleting..." : "Delete"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             )}
           </div>
         </CardContent>
@@ -375,7 +367,10 @@ export default function ImageCard({ image, onDelete, onRename, onError }) {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteDialog(false);
+              }}
               disabled={deleting}
             >
               Cancel

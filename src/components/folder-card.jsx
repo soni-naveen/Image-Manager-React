@@ -127,7 +127,7 @@ export default function FolderCard({
           className="px-4 py-7 text-center"
           onClick={() => !editing && onNavigate(folder._id, folder.name)}
         >
-          <Folder className="w-14 sm:w-16 h-14 sm:h-16 mx-auto mb-2 text-blue-500" />
+          <Folder className="w-16 h-16 mx-auto mb-2 text-blue-500" />
           {editing ? (
             <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
               <Input
@@ -161,11 +161,11 @@ export default function FolderCard({
             </div>
           ) : (
             <>
-              <p className="text-sm font-medium truncate whitespace-pre" title={folder.name}>
+              <p
+                className="text-sm font-medium truncate whitespace-pre"
+                title={folder.name}
+              >
                 {folder.name}
-              </p>
-              <p className="text-xs text-gray-500 mt-1 sm:mt-2">
-                {new Date(folder.createdAt).toLocaleDateString()}
               </p>
             </>
           )}
@@ -173,14 +173,14 @@ export default function FolderCard({
 
         {/* Actions dropdown */}
         {!editing && (
-          <div className="absolute top-2 right-2 opacity-100 transition-opacity">
+          <div className="absolute top-1 right-1 opacity-100 transition-opacity">
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button size="sm" variant="secondary" className="h-6 w-6 p-0">
+                <Button size="sm" variant="none" className="h-6 w-6 p-0">
                   <MoreVertical className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" side="bottom">
                 <DropdownMenuItem
                   onClick={() => onNavigate(folder._id, folder.name)}
                 >

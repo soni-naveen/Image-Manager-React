@@ -257,9 +257,11 @@ export default function Dashboard() {
   };
 
   const navigateToRoot = () => {
-    setLoadImages(true);
-    setCurrentFolder(null);
-    setBreadcrumb([]);
+    if (currentFolder !== null) {
+      setLoadImages(true);
+      setCurrentFolder(null);
+      setBreadcrumb([]);
+    }
   };
 
   const navigateToBreadcrumb = (index) => {
@@ -310,7 +312,14 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setError("");
+              }
+            }}
+            className="fixed inset-0 z-50 flex items-start justify-center bg-gray-900/50 backdrop-blur-xs p-4"
+          >
             <Alert
               variant="destructive"
               className="relative w-full bg-red-100 max-w-md flex items-center justify-between shadow-lg"
@@ -381,7 +390,7 @@ export default function Dashboard() {
           </Button>
           {breadcrumb.map((item, index) => (
             <div key={item.id} className="flex items-center">
-              <span className="text-gray-400">/</span>
+              <span className="text-gray-400"> {">"} </span>
               <Button
                 variant="ghost"
                 size="sm"
