@@ -286,7 +286,10 @@ export default function ImageCard({ image, onDelete, onRename, onError }) {
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={handleDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteDialog(true);
+                  }}
                   disabled={deleting}
                 >
                   <Trash2 className="w-4 h-4" />
