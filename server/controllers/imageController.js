@@ -16,6 +16,19 @@ exports.uploadImage = async (req, res) => {
       return res.status(400).json({ message: "Name and image are required" });
     }
 
+    // Check if a image with the same name already exists in the same directory
+    const existingImage = await Image.findOne({
+      name: name,
+      userId: userId,
+      folderId: folderId ? new ObjectId(folderId) : null,
+    });
+
+    if (existingImage) {
+      return res.status(400).json({
+        message: "An image with this name already exists in this location",
+      });
+    }
+
     // Upload image to Cloudinary
     const cloudinaryResult = await uploadToCloudinary(
       image,
