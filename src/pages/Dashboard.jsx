@@ -246,6 +246,9 @@ export default function Dashboard() {
   };
 
   const navigateToFolder = (folderId, folderName) => {
+    if (currentFolder === folderId) {
+      return;
+    }
     setLoadImages(true);
     setCurrentFolder(folderId);
 
@@ -257,20 +260,31 @@ export default function Dashboard() {
   };
 
   const navigateToRoot = () => {
-    if (currentFolder !== null) {
-      setLoadImages(true);
-      setCurrentFolder(null);
-      setBreadcrumb([]);
+    if (currentFolder === null) {
+      return;
     }
+
+    setLoadImages(true);
+    setCurrentFolder(null);
+    setBreadcrumb([]);
   };
 
   const navigateToBreadcrumb = (index) => {
     if (index === -1) {
+      if (currentFolder === null) {
+        return;
+      }
       navigateToRoot();
     } else {
-      setLoadImages(true);
       const newBreadcrumb = breadcrumb.slice(0, index + 1);
-      setCurrentFolder(newBreadcrumb[newBreadcrumb.length - 1].id);
+      const targetFolderId = newBreadcrumb[newBreadcrumb.length - 1].id;
+
+      if (currentFolder === targetFolderId) {
+        return;
+      }
+
+      setLoadImages(true); // Only set loading if actually navigating
+      setCurrentFolder(targetFolderId);
       setBreadcrumb(newBreadcrumb);
     }
   };
@@ -282,8 +296,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -503,7 +520,10 @@ export default function Dashboard() {
         {/* Folders and Images Grid */}
         {loadImages ? (
           <div className="mt-20 flex items-center justify-center">
-            <div className="text-lg">Loading...</div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
           </div>
         ) : (
           <>
