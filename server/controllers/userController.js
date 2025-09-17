@@ -5,6 +5,10 @@ exports.profile = async (req, res) => {
     const id = req.user.id;
     const user = await User.findById(id);
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
     return res.status(200).json({
       id: user.id,
       name: user.name,

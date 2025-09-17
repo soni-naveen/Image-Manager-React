@@ -1,13 +1,28 @@
-// This will prevent non-authenticated users from accessing this route
 import { Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
 
-  if (token !== null) {
+  const isTokenValid = () => {
+    if (!token) return false;
+
+    try {
+      const decoded = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      return decoded.exp && decoded.exp > currentTime;
+    } catch (error) {
+      console.error("Invalid token", error);
+      return false;
+    }
+  };
+
+  if (isTokenValid()) {
     return children;
   } else {
-    return <Navigate to="/login" />;
+    localStorage.removeItem("token");
+    return <Navigate to="/login" replace />;
   }
 }
 
